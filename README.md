@@ -25,7 +25,7 @@ This is a **backend** project built with **Spring Boot** for a news website. It 
 ```plaintext
 src/
 ├── main/
-│   ├── java/com/example/news/
+│   ├── java/com/sport/news/
 │   │   ├── controller/   # REST API controllers
 │   │   ├── service/      # Business logic services
 │   │   ├── repository/   # Database interaction layers
