@@ -1,6 +1,7 @@
 package com.sport.news.service;
 
 import java.util.Date;
+import java.util.Optional;
 
 import javax.crypto.SecretKey;
 
@@ -50,7 +51,10 @@ public class JwtUtils {
 
     public String extractToken(HttpServletRequest request){
         String headerAuth = request.getHeader("Authorization");
-        return (headerAuth != null && headerAuth.startsWith("Bearer ")) ? headerAuth.substring(7) : null;
+        return Optional.ofNullable(headerAuth)
+                .filter(auth -> auth.startsWith("Bearer "))
+                .map(auth -> auth.substring("Bearer ".length()))
+                .orElse(null);
     }
 
     public String extractUsername(String token){
@@ -66,14 +70,16 @@ public class JwtUtils {
         try {
             Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(authtToken);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
+        } catch (ExpiredJwtException e) {
+            throw e;
+        } catch (JwtException e){
+            throw new IllegalArgumentException("Invalid token", e);
         }
     }
 
     public Authentication getAuthentication(String token, UserDetails userDetails){
-        if (userDetails == null) {
-            throw new IllegalArgumentException("UserDetails cannot be null");
+        if (userDetails == null || userDetails.getUsername() == null || userDetails.getUsername().isEmpty()) {
+            throw new IllegalArgumentException("Invalid UserDetails");
         }
         if (validateToken(token) && 
             userDetails.getUsername().equals(extractUsername(token))) {

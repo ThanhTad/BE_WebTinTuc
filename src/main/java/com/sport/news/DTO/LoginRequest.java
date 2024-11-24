@@ -1,4 +1,4 @@
-package com.sport.news.DTO;
+package com.sport.news.dto;
 
 import lombok.Data;
 

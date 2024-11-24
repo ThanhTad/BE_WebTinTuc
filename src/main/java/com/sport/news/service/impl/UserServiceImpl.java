@@ -3,11 +3,14 @@ package com.sport.news.service.impl;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mongodb.DuplicateKeyException;
+import com.sport.news.exception.InvalidUserInformationException;
+import com.sport.news.exception.UserAlreadyExistsException;
 import com.sport.news.model.User;
 import com.sport.news.repository.UserRepository;
 import com.sport.news.service.UserService;
@@ -28,7 +31,7 @@ public class UserServiceImpl implements UserService {
         checkUsernameUnique(user.getUsername());
         checkEmailUnique(user.getEmail());
         if(user.getPassword() == null || user.getPassword().isEmpty()){
-            throw new IllegalArgumentException("Password cannot be null or empty");
+            throw new InvalidUserInformationException("Password cannot be null or empty");
         }
 
         String hashPass = passwordEncoder.encode(user.getPassword());
@@ -41,7 +44,7 @@ public class UserServiceImpl implements UserService {
             return savedUser;
         } catch (DuplicateKeyException e) {
             log.error("Failed to create user: {}", e.getMessage());
-            throw new IllegalArgumentException("User already exists", e);
+            throw new UserAlreadyExistsException("User with this username or email already exists.");
         }
     }
 
@@ -59,13 +62,13 @@ public class UserServiceImpl implements UserService {
     public User getUserById(String id) {
        return userRepository.findById(id)
                             .filter(user -> !user.getIsDeleted())
-                            .orElseThrow(() -> new IllegalArgumentException("User not found or has been deleted"));
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found or has been deleted"));
     }
 
     @Override
     public User updatUser(String id, User user) {
         if(user == null || id == null){
-            throw new IllegalArgumentException("User or User ID cannot be null");
+            throw new InvalidUserInformationException("User or User ID cannot be null");
         }
         checkUsernameUnique(user.getUsername());
         checkEmailUnique(user.getEmail());
@@ -75,13 +78,13 @@ public class UserServiceImpl implements UserService {
                                     existingUser.setEmail(user.getEmail());
                                     return userRepository.save(existingUser);
                                 })
-                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @Override
     public void softDelete(String id) {
         User user = userRepository.findById(id)
-                                    .orElseThrow(() -> new IllegalArgumentException("User ID does not exist"));
+                                    .orElseThrow(() -> new UsernameNotFoundException("User ID does not exist"));
         user.setIsDeleted(true);
         userRepository.save(user);
     }
@@ -89,7 +92,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(String id) {
        if(!userRepository.existsById(id)){
-            throw new IllegalArgumentException("User ID does not exist");
+            throw new UsernameNotFoundException("User ID does not exist");
        }
        userRepository.deleteById(id);
     }
@@ -97,13 +100,13 @@ public class UserServiceImpl implements UserService {
 
     public void checkUsernameUnique(String username) {
         if (userRepository.existsByUsernameAndIsDeletedFalse(username)) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new UserAlreadyExistsException("Username already exists");
         }
     }
 
     public void checkEmailUnique(String email) {
         if (userRepository.existsByEmailAndIsDeletedFalse(email)) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new UserAlreadyExistsException("Email already exists");
         }
     }
 

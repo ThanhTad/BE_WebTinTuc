@@ -15,12 +15,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mongodb.DuplicateKeyException;
+import com.sport.news.exception.UserAlreadyExistsException;
 import com.sport.news.model.User;
 import com.sport.news.service.UserService;
+
+import lombok.extern.slf4j.Slf4j;
 
 
 @RestController
 @RequestMapping("/api/users")
+@Slf4j
 public class UserController {
     
     @Autowired
@@ -32,10 +36,8 @@ public class UserController {
             System.out.println(user);
             userService.createUser(user);
             return new ResponseEntity<>("User created successfully", HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch(DuplicateKeyException e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            throw new UserAlreadyExistsException("User with this username or email already exists.");
         }
     }
 
@@ -53,42 +55,26 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable String id) {
-        try {
-            User user = userService.getUserById(id);
-            return new ResponseEntity<>(user, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        User user = userService.getUserById(id);
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
     
     @PutMapping("/{id}")
     public ResponseEntity<String> updateUser(@PathVariable String id, @RequestBody User user){
-        try {
-            userService.updatUser(id, user);
-            return new ResponseEntity<>("Update Successfully", HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        userService.updatUser(id, user);
+        return new ResponseEntity<>("Update Successfully", HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> softDeleteUser(@PathVariable String id){
-        try {
-            userService.softDelete(id);
-            return new ResponseEntity<>("Delete Successfully", HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        userService.softDelete(id);
+        return new ResponseEntity<>("Delete Successfully", HttpStatus.OK);
     }
 
     @DeleteMapping("/hard/{id}")
     public ResponseEntity<String> hardDeleteUser(@PathVariable String id){
-        try {
-            userService.deleteUser(id);
-            return new ResponseEntity<>("Delete Successfully", HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+        userService.deleteUser(id);
+        return new ResponseEntity<>("Delete Successfully", HttpStatus.OK);
     } 
 
 }
