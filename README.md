@@ -28,6 +28,7 @@ src/
 │   ├── java/com/sport/news/
 │   │   ├── controller/   # REST API controllers
 │   │   ├── service/      # Business logic services
+│   │   ├── exception/    # Exception handling
 │   │   ├── repository/   # Database interaction layers
 │   │   ├── model/        # Data models (Entity, DTO)
 │   │   ├── config/       # Configuration files (Security, JWT, etc.)
