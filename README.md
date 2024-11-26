@@ -4,6 +4,8 @@
 This is a **backend** project built with **Spring Boot** for a news website. It provides APIs to support functionalities such as:
 - News management.
 - News search.
+- Standings for top leagues
+- Match Schedule
 - User registration and login.
 - Role-based access management (user/admin).
 
