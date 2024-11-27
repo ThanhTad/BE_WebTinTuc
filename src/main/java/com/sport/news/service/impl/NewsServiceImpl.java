@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sport.news.exception.BusinessOperationException;
+import com.sport.news.exception.DataNotFoundException;
 import com.sport.news.model.News;
 import com.sport.news.repository.NewsRepository;
 import com.sport.news.service.NewsService;
@@ -25,12 +27,7 @@ public class NewsServiceImpl implements NewsService {
 
     @Override
     public Page<News> getAllNews(Pageable pageable) {
-        try {
-            return newsRepository.findAll(pageable);
-        } catch (Exception e) {
-            log.error("Error fetching all news", e);
-            throw new IllegalArgumentException("Failed to fetch all news");
-        }
+        return newsRepository.findAll(pageable);
     }
 
     @Override
@@ -39,7 +36,7 @@ public class NewsServiceImpl implements NewsService {
             return newsRepository.findByTitleContainingIgnoreCase(title, pageable);
         } catch (Exception e) {
             log.error("Error searching news by title: {}", title, e);
-            throw new IllegalArgumentException("Failed to search news by title: " + title);
+            throw new BusinessOperationException("Failed to search news by title: " + title);
         }
     }
 
@@ -53,7 +50,7 @@ public class NewsServiceImpl implements NewsService {
             return savedNews;
         } catch (Exception e) {
             log.error("Error creating news", e);
-            throw new IllegalArgumentException("Failed to create news");
+            throw new BusinessOperationException("Failed to create news");
         }
     }
 
@@ -66,7 +63,7 @@ public class NewsServiceImpl implements NewsService {
                     existingNews.setIsoTime(LocalDateTime.now());
                     return newsRepository.save(existingNews);
                 })
-                .orElseThrow(() -> new IllegalArgumentException("News not found with id: " + id));
+                .orElseThrow(() -> new DataNotFoundException("News not found with id: " + id));
     }
 
     @Override
@@ -77,14 +74,14 @@ public class NewsServiceImpl implements NewsService {
             log.info("News deleted successfully: {}", id);
         } catch (Exception e) {
             log.error("Error deleting news with id: {}", id, e);
-            throw new IllegalArgumentException("Failed to delete news with id: " + id);
+            throw new BusinessOperationException("Failed to delete news with id: " + id);
         }
     }
 
     @Override
     public News getNewsById(String id) {
         return newsRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("News not found with id: " + id));
+                .orElseThrow(() -> new DataNotFoundException("News not found with id: " + id));
     }
 
     private void validateInput(News news) {
